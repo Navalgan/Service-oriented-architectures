@@ -1,0 +1,30 @@
+version: '3.3'
+
+services:
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./dаta:/root/redis
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_PORT=6379
+    networks:
+      - backend
+  major:
+    image: golang:latest
+    restart: always
+    build:
+      context: .
+      dockerfile: ./major/Dockerfile
+    ports:
+      - 8080:8080
+    networks:
+      - backend
+    depends_on:
+      - redis
+
+networks:
+  backend:

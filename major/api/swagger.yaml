@@ -1,0 +1,149 @@
+openapi: 3.0.3
+info:
+  title: MySocial API
+  description: "Social network. There are users on the social network who can register,\
+    \ create, update and delete posts, get their own wall with posts, view walls with\
+    \ posts from other users, like and view statistics on posts in the form of the\
+    \ number of likes and views, as well as leave comments on posts and view them."
+  contact:
+    name: Nikita
+    email: neazhazha@edu.hse.ru
+  version: "1.0"
+servers:
+- url: http://localhost:8080
+  description: Dev server
+paths:
+  /user/registration:
+    post:
+      tags:
+      - user
+      summary: User registration
+      description: User registration. Accepts json input with a username and password.
+      operationId: userReg
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        "201":
+          description: The user has been created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionID'
+        "400":
+          description: Not a unique login or an empty password
+  /user/update:
+    put:
+      tags:
+      - user
+      summary: Update user information
+      description: "Updating user data: First Name, Last Name, Date of birth, Mail,\
+        \ Phone number."
+      operationId: userUpdate
+      parameters:
+      - name: sessionID
+        in: header
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: login
+        in: header
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Information'
+      responses:
+        "200":
+          description: Successful operation
+        "400":
+          description: Invalid json data
+        "401":
+          description: Invalid login or password
+  /user/auth:
+    get:
+      tags:
+      - user
+      summary: Logs user into the system
+      description: User registration. Accepts json input with a username and password.
+      operationId: userAuth
+      parameters:
+      - name: login
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: password
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionID'
+        "400":
+          description: Invalid login or password
+components:
+  schemas:
+    User:
+      title: User
+      type: object
+      properties:
+        login:
+          type: string
+          description: Must be unique in the system
+          example: AwesomeUser
+        password:
+          type: string
+          description: Can't be empty and will not change
+          example: 12345qwerty
+    Information:
+      title: Information
+      type: object
+      properties:
+        name:
+          type: string
+          description: The user's name
+          example: Name
+        surname:
+          type: string
+          description: The user's surname
+          example: Surname
+        date_of_birth:
+          type: string
+          description: The user's date of birth
+          example: Surname
+        mail:
+          type: string
+          description: The user's mail
+          example: user_email@mail.ru
+        phone_number:
+          type: string
+          description: The user's phone number
+          example: "+0123456789"
+    SessionID:
+      title: SessionID
+      type: object
+      properties:
+        sessionID:
+          type: integer
+          example: 123
+      example:
+        sessionID: 123
