@@ -14,7 +14,6 @@ import (
 	"encoding/json"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
-	"log"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -69,7 +68,6 @@ func UserAuth(w http.ResponseWriter, r *http.Request) {
 	sessionId := SessionId{newSessionId}
 	err = json.NewEncoder(w).Encode(sessionId)
 	if err != nil {
-		log.Println("6")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
