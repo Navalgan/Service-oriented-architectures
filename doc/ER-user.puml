@@ -1,0 +1,7 @@
+@startuml
+map Table {
+ id => int
+ nickname => string
+ password => string
+}
+@enduml

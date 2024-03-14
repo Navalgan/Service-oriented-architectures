@@ -1,0 +1,14 @@
+@startuml Add context
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма контекста
+
+
+Person(user, пользователь)
+
+System(social_network, социальная сеть, "регистрация, аутентификация, взаимодействие с другими пользователями")
+
+Rel(user, social_network, "API")
+
+@enduml

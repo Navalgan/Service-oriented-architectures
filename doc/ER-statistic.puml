@@ -1,0 +1,7 @@
+@startuml
+map Table {
+ post_id => int
+ view_count => int
+ like_count => int
+}
+@enduml
