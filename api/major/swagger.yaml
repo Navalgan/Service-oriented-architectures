@@ -10,13 +10,14 @@ info:
     email: neazhazha@edu.hse.ru
   version: "1.0"
 servers:
-- url: http://localhost:8080
-  description: Dev server
+  - url: http://localhost:8080
+    description: Dev server
 paths:
-  /user/registration:
+  /user/join:
     post:
       tags:
-      - user
+        - user
+      security: []
       summary: User registration
       description: User registration. Accepts json input with a username and password.
       operationId: userReg
@@ -28,35 +29,23 @@ paths:
       responses:
         "201":
           description: The user has been created
-          content:
-            application/json:
+          headers:
+            Set-Cookie:
               schema:
-                $ref: '#/components/schemas/SessionID'
+                type: string
+                example: userLogin=AwesomeUser; Path=/; HttpOnly
         "400":
           description: Not a unique login or an empty password
   /user/update:
     put:
       tags:
-      - user
+        - user
+      security:
+        - cookieAuth: []
       summary: Update user information
       description: "Updating user data: First Name, Last Name, Date of birth, Mail,\
         \ Phone number."
       operationId: userUpdate
-      parameters:
-      - name: sessionID
-        in: header
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: integer
-      - name: login
-        in: header
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: integer
       requestBody:
         content:
           application/json:
@@ -72,32 +61,34 @@ paths:
   /user/auth:
     get:
       tags:
-      - user
+        - user
+      security: []
       summary: Logs user into the system
       description: User registration. Accepts json input with a username and password.
       operationId: userAuth
       parameters:
-      - name: login
-        in: query
-        required: true
-        style: form
-        explode: true
-        schema:
-          type: string
-      - name: password
-        in: query
-        required: true
-        style: form
-        explode: true
-        schema:
-          type: string
+        - name: login
+          in: query
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+        - name: password
+          in: query
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
       responses:
         "200":
           description: Successful operation
-          content:
-            application/json:
+          headers:
+            Set-Cookie:
               schema:
-                $ref: '#/components/schemas/SessionID'
+                type: string
+                example: userLogin=AwesomeUser; Path=/; HttpOnly
         "400":
           description: Invalid login or password
 components:
@@ -138,12 +129,10 @@ components:
           type: string
           description: The user's phone number
           example: "+0123456789"
-    SessionID:
-      title: SessionID
-      type: object
-      properties:
-        sessionID:
-          type: integer
-          example: 123
-      example:
-        sessionID: 123
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: userLogin  # cookie name
+security:
+  - cookieAuth: []
