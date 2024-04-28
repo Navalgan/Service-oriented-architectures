@@ -17,7 +17,7 @@ paths:
     post:
       tags:
         - user
-      security: []
+      security: [ ]
       summary: User registration
       description: User registration. Accepts json input with a username and password.
       operationId: userReg
@@ -36,33 +36,11 @@ paths:
                 example: userLogin=AwesomeUser; Path=/; HttpOnly
         "400":
           description: Not a unique login or an empty password
-  /user/update:
-    put:
-      tags:
-        - user
-      security:
-        - cookieAuth: []
-      summary: Update user information
-      description: "Updating user data: First Name, Last Name, Date of birth, Mail,\
-        \ Phone number."
-      operationId: userUpdate
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Information'
-      responses:
-        "200":
-          description: Successful operation
-        "400":
-          description: Invalid json data
-        "401":
-          description: Invalid login or password
   /user/auth:
     get:
       tags:
         - user
-      security: []
+      security: [ ]
       summary: Logs user into the system
       description: User registration. Accepts json input with a username and password.
       operationId: userAuth
@@ -91,6 +69,156 @@ paths:
                 example: userLogin=AwesomeUser; Path=/; HttpOnly
         "400":
           description: Invalid login or password
+  /user/update:
+    put:
+      tags:
+        - user
+      security:
+        - cookieAuth: [ ]
+      summary: Update user information
+      description: "Updating user data: First Name, Last Name, Date of birth, Mail,\
+        \ Phone number."
+      operationId: userUpdate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Information'
+      responses:
+        "200":
+          description: Successful operation
+        "400":
+          description: Invalid data
+        "401":
+          description: Permission denied
+  /post/create:
+    post:
+      tags:
+        - post
+      security:
+        - cookieAuth: [ ]
+      summary: Create post by user
+      description: Creating post with text from request body.
+      operationId: postCreate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostText'
+      responses:
+        "200":
+          description: Successful operation. Return the id of the new post.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        "400":
+          description: Invalid data
+        "401":
+          description: Permission denied
+  /post/{postId}:
+    get:
+      tags:
+        - post
+      security: [ ]
+      summary: Get post by id
+      description: Getting post by id.
+      operationId: getPostById
+      parameters:
+        - in: path
+          name: postId
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the post to get
+      responses:
+        "200":
+          description: Successful operation. Return the post.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        "401":
+          description: Invalid login
+        "404":
+          description: Invalid post Id
+  /posts/{login}:
+    get:
+      tags:
+        - post
+      security: [ ]
+      summary: Get posts by login
+      description: Getting post by login.
+      operationId: getPostsByLogin
+      parameters:
+        - in: path
+          name: login
+          schema:
+            type: string
+          required: true
+          description: Numeric ID of the post to get
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayOfPosts'
+        "404":
+          description: Invalid user login
+  /post/{postId}/update:
+    put:
+      tags:
+        - post
+      security:
+        - cookieAuth: [ ]
+      summary: Update text in post
+      description: Updating text in post with new post date.
+      operationId: updatePost
+      parameters:
+        - in: path
+          name: postId
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the post to get
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostText'
+      responses:
+        "200":
+          description: Successful operation
+        "400":
+          description: Invalid data
+        "401":
+          description: Permission denied
+        "404":
+          description: Invalid post Id
+  /post/{postId}/delete:
+    delete:
+      tags:
+        - post
+      security:
+        - cookieAuth: [ ]
+      summary: Delete post by id.
+      description: Deleting post by id.
+      operationId: deletePost
+      parameters:
+        - in: path
+          name: postId
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the post to get
+      responses:
+        "200":
+          description: Successful operation
+        "401":
+          description: Permission denied
+        "404":
+          description: Invalid post Id
 components:
   schemas:
     User:
@@ -129,10 +257,59 @@ components:
           type: string
           description: The user's phone number
           example: "+0123456789"
+    PostText:
+      title: PostText
+      type: object
+      properties:
+        text:
+          type: string
+          description: The post's text
+          example: "What would your name be in the bank: First name is the card number, Last name is the number on the back"
+    Post:
+      title: Post
+      type: object
+      properties:
+        postId:
+          type: integer
+          description: The id of post
+          example: 228
+        date:
+          type: string
+          description: date of creation of the post
+          example: "01.01.1970"
+        author:
+          type: string
+          description: The author of post
+          example: Jesus
+        text:
+          type: string
+          description: The post's text
+          example: "What would your name be in the bank: First name is the card number, Last name is the number on the back."
+    ArrayOfPosts:
+      type: array
+      items:
+        type: object
+        properties:
+          postId:
+            type: integer
+            description: The id of post
+            example: 228
+          date:
+            type: string
+            description: date of creation of the post
+            example: "01.01.1970"
+          author:
+            type: string
+            description: The author of post
+            example: Jesus
+          text:
+            type: string
+            description: The post's text
+            example: "What would your name be in the bank: First name is the card number, Last name is the number on the back."
   securitySchemes:
     cookieAuth:
       type: apiKey
       in: cookie
       name: userLogin  # cookie name
 security:
-  - cookieAuth: []
+  - cookieAuth: [ ]

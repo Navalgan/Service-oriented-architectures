@@ -1,6 +1,6 @@
 FROM golang:latest
 
-COPY . /app
+COPY ./ /app
 
 WORKDIR /app/cmd/major
 

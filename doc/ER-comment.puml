@@ -1,9 +1,9 @@
 @startuml
 map Table {
- user_id => int
- post_id => int
+ post_id => string
+ user_id => string
  create_date => date
  prev_id => int для комментария, null для поста
- value => string
+ text => string
 }
 @enduml

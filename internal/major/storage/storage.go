@@ -1,4 +1,4 @@
-package majorDB
+package storage
 
 import (
 	"Service-oriented-architectures/internal/common"
@@ -29,15 +29,15 @@ type UserDB struct {
 	PhoneNumber string `json:"phone_number,omitempty"`
 }
 
-type MajorDB struct {
+type DataBase struct {
 	c *mongo.Collection
 }
 
-func NewMajorDB(client *mongo.Client) *MajorDB {
-	return &MajorDB{c: client.Database("users").Collection("info")}
+func NewDataBase(client *mongo.Client) *DataBase {
+	return &DataBase{c: client.Database("users").Collection("info")}
 }
 
-func (db *MajorDB) Join(newUser common.UserLogPas) error {
+func (db *DataBase) Join(newUser common.UserLogPas) error {
 	filter := bson.D{{"login", newUser.Login}}
 
 	count, err := db.c.CountDocuments(context.Background(), filter)
@@ -60,7 +60,7 @@ func (db *MajorDB) Join(newUser common.UserLogPas) error {
 	return nil
 }
 
-func (db *MajorDB) Update(login string, newInfo common.UserInfo) error {
+func (db *DataBase) Update(login string, newInfo common.UserInfo) error {
 	filter := bson.D{{"login", login}}
 	update := bson.D{{"$set", bson.D{
 		{"name", newInfo.Name},
@@ -82,7 +82,7 @@ func (db *MajorDB) Update(login string, newInfo common.UserInfo) error {
 	return nil
 }
 
-func (db *MajorDB) GetUser(userLogin string) (*common.UserLogPas, error) {
+func (db *DataBase) GetUser(userLogin string) (*common.UserLogPas, error) {
 	filter := bson.D{{"login", userLogin}}
 
 	var result UserDB
