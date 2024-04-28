@@ -3,9 +3,8 @@ package storage
 import (
 	"Service-oriented-architectures/internal/common/gen/go"
 	"context"
-	"strconv"
-
 	"github.com/gocql/gocql"
+	"github.com/google/uuid"
 	"log"
 	"time"
 )
@@ -36,7 +35,7 @@ func NewDataBase() (*DataBase, error) {
 		return nil, err
 	}
 
-	if err := session.Query(
+	if err = session.Query(
 		"CREATE KEYSPACE IF NOT EXISTS SocialNetwork WITH REPLICATION = {'class': 'NetworkTopologyStrategy'}",
 	).Exec(); err != nil {
 		log.Fatal(err)
@@ -45,7 +44,7 @@ func NewDataBase() (*DataBase, error) {
 
 	log.Print("KEYSPACE ready")
 
-	const query = "CREATE TABLE IF NOT EXISTS SocialNetwork.Posts (postId text, lastUpdate text, author text, postText text, PRIMARY KEY (postId, author));"
+	const query = "CREATE TABLE IF NOT EXISTS SocialNetwork.Posts (postId uuid, lastUpdate text, author text, postText text, PRIMARY KEY (postId, author));"
 
 	if err = session.Query(query).Exec(); err != nil {
 		log.Println(err)
@@ -62,7 +61,7 @@ func NewDataBase() (*DataBase, error) {
 func (db *DataBase) CreatePost(req *task_v1.PostRequest) (*task_v1.PostResponse, error) {
 	const query = "INSERT INTO SocialNetwork.Posts (postId, lastUpdate, author, postText) VALUES (?, ?, ?, ?)"
 
-	postId := req.Login + strconv.FormatInt(time.Now().UnixNano(), Base)
+	postId := uuid.NewString()
 
 	curTime := time.Now().Format(time.RFC3339)
 
