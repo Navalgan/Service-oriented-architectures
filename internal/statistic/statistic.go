@@ -1,8 +1,8 @@
 package statistic
 
 import (
+	"Service-oriented-architectures/internal/statistic/storage"
 	"Service-oriented-architectures/internal/task/grpc"
-	"Service-oriented-architectures/internal/task/storage"
 
 	"google.golang.org/grpc"
 )

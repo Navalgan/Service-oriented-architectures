@@ -227,7 +227,7 @@ paths:
           schema:
             type: integer
           required: true
-          description: Numeric ID of the post to get
+          description: Numeric ID of the post to update
       requestBody:
         content:
           application/json:

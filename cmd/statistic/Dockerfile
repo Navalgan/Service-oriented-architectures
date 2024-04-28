@@ -2,7 +2,7 @@ FROM golang:latest
 
 COPY . /app
 
-WORKDIR /app/statistic
+WORKDIR ./app/statistic
 
 RUN go build main.go
 
