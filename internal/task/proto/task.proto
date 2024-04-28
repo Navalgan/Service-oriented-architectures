@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package task;
+
+option go_package = "task.v1";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+service Task {
+  rpc CreatePost(PostRequest) returns (PostResponse);
+
+  rpc GetPostById(PostIdRequest) returns (PostResponse);
+
+  rpc GetPostsByLogin(LoginRequest) returns (PostsResponse);
+
+  rpc UpdatePost(UpdatePostRequest) returns (google.protobuf.Empty);
+
+  rpc DeletePost(DeletePostRequest) returns (google.protobuf.Empty);
+}
+
+message PostRequest {
+  string login = 1;
+  string text = 2;
+}
+
+message PostResponse {
+  string postId = 1;
+  google.protobuf.Timestamp date = 2;
+  string author = 3;
+  string text = 4;
+}
+
+message PostIdRequest {
+  string postId = 1;
+}
+
+message LoginRequest {
+  string login = 1;
+}
+
+message UpdatePostRequest {
+  string postId = 1;
+  string login = 2;
+  string text = 3;
+}
+
+message PostsResponse {
+  repeated PostResponse posts = 1;
+}
+
+message DeletePostRequest {
+  string login = 1;
+  string postId = 2;
+}

@@ -1,14 +1,15 @@
 package majorDB
 
 import (
-	"Service-oriented-architectures/internal"
+	"Service-oriented-architectures/internal/common"
 	"Service-oriented-architectures/internal/errors"
 
 	"context"
 	"fmt"
+	"log"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"log"
 )
 
 type UserDB struct {
@@ -36,7 +37,7 @@ func NewMajorDB(client *mongo.Client) *MajorDB {
 	return &MajorDB{c: client.Database("users").Collection("info")}
 }
 
-func (db *MajorDB) Join(newUser internal.UserLogPas) error {
+func (db *MajorDB) Join(newUser common.UserLogPas) error {
 	filter := bson.D{{"login", newUser.Login}}
 
 	count, err := db.c.CountDocuments(context.Background(), filter)
@@ -59,7 +60,7 @@ func (db *MajorDB) Join(newUser internal.UserLogPas) error {
 	return nil
 }
 
-func (db *MajorDB) Update(login string, newInfo internal.UserInfo) error {
+func (db *MajorDB) Update(login string, newInfo common.UserInfo) error {
 	filter := bson.D{{"login", login}}
 	update := bson.D{{"$set", bson.D{
 		{"name", newInfo.Name},
@@ -81,7 +82,7 @@ func (db *MajorDB) Update(login string, newInfo internal.UserInfo) error {
 	return nil
 }
 
-func (db *MajorDB) GetUser(userLogin string) (*internal.UserLogPas, error) {
+func (db *MajorDB) GetUser(userLogin string) (*common.UserLogPas, error) {
 	filter := bson.D{{"login", userLogin}}
 
 	var result UserDB
@@ -90,7 +91,7 @@ func (db *MajorDB) GetUser(userLogin string) (*internal.UserLogPas, error) {
 		return nil, err
 	}
 
-	return &internal.UserLogPas{
+	return &common.UserLogPas{
 		Login:    result.Login,
 		Password: result.Password,
 	}, nil
