@@ -1,6 +1,6 @@
 @startuml
 map Table {
- post_id => int
+ post_id => uuid
  view_count => int
  like_count => int
 }

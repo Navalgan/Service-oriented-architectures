@@ -3,22 +3,19 @@ package main
 import (
 	"Service-oriented-architectures/internal/statistic"
 
+	"context"
 	"log"
-	"net"
 )
 
 func main() {
-	service, err := statistic.NewService()
-	if err != nil {
-		log.Fatal(" ")
-	}
+	ctx := context.Background()
 
-	l, err := net.Listen("tcp", ":9090")
+	service, err := statistic.NewService(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	log.Printf("Statistic service started")
 
-	log.Fatal(service.Serve(l))
+	service.Run(ctx)
 }

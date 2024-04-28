@@ -1,8 +1,10 @@
 package common
 
+import "github.com/google/uuid"
+
 type UserLogPas struct {
 	// The user's id
-	UserID string `json:"user_id,omitempty"`
+	UserID uuid.UUID `json:"user_id,omitempty"`
 	// Must be unique in the system
 	Login string `json:"login,omitempty"`
 	// Can't be empty and will not change
@@ -11,7 +13,7 @@ type UserLogPas struct {
 
 type UserInfo struct {
 	// The user's id
-	UserID string `json:"user_id,omitempty"`
+	UserID uuid.UUID `json:"user_id,omitempty"`
 	// The user's name
 	Name string `json:"name,omitempty"`
 	// The user's surname

@@ -2,6 +2,7 @@ package main
 
 import (
 	"Service-oriented-architectures/internal/major"
+	"context"
 
 	"log"
 	"net/http"
@@ -12,7 +13,9 @@ import (
 func main() {
 	server := mux.NewRouter()
 
-	service, err := major.NewService()
+	ctx := context.Background()
+
+	service, err := major.NewService(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}

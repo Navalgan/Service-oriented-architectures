@@ -6,6 +6,7 @@ map Table {
  name => string
  surname => string
  date_of_birth => string
+ mail => string
  phone_number => string
 }
 @enduml

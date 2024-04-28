@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: MySocial API
   description: "Social network. There are users on the social network who can register,\
@@ -227,7 +227,7 @@ paths:
           schema:
             type: integer
           required: true
-          description: Numeric ID of the post to update
+          description: Numeric ID of the post to get
       requestBody:
         content:
           application/json:

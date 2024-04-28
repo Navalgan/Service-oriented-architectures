@@ -8,8 +8,8 @@ import (
 )
 
 type Service struct {
-	GRPCServer *grpc.Server
 	DB         *storage.DataBase
+	GRPCServer *grpc.Server
 }
 
 func NewService() (*Service, error) {
