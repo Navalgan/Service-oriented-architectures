@@ -2,11 +2,13 @@ package storage
 
 import (
 	"Service-oriented-architectures/internal/common/gen/go"
+
 	"context"
-	"github.com/gocql/gocql"
-	"github.com/google/uuid"
 	"log"
 	"time"
+
+	"github.com/gocql/gocql"
+	"github.com/google/uuid"
 )
 
 type DataBase struct {
