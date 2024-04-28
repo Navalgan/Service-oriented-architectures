@@ -27,8 +27,8 @@ SystemQueue(kafka, "Kafka", "Ответы для публикации")
 
 Rel(admin, kafka, "Отправка событий с просмотрами и лайками")
 
-System_Boundary(statistics, "Сервис статистики") {
-    Container(statistics_admin, "Statistics backend", "Go 1.22", "отвечает за подсчет лайков и просмотров")
+System_Boundary(statistic, "Сервис статистики") {
+    Container(statistics_admin, "Statistic backend", "Go 1.22", "отвечает за подсчет лайков и просмотров")
     Container_Ext(statistics_DB, "Data Base", "Clickhouse", "отвечает за хранение статистики")
 
     Rel_R(statistics_admin, statistics_DB, " ")
@@ -40,7 +40,7 @@ Rel(statistics_admin, admin, "Отдача статистики пользова
 
 System_Boundary(posts_comments, "Сервис постов и комментариев") {
     Container(posts_comments_admin, "Backend", "Go 1.22", "отвечает за создание/удаление постов и комментариев")
-    Container_Ext(posts_comments_DB, "Data Base", "MongoDB", "отвечает за хранение постов и комментариев")
+    Container_Ext(posts_comments_DB, "Data Base", "Cassandra", "отвечает за хранение постов и комментариев")
 
     Rel_R(posts_comments_admin, posts_comments_DB, " ")
 }

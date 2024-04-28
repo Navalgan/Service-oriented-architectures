@@ -1,7 +1,11 @@
 @startuml
 map Table {
- id => int
- nickname => string
+ id => uuid
+ login => string
  password => string
+ name => string
+ surname => string
+ date_of_birth => string
+ phone_number => string
 }
 @enduml
