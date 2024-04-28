@@ -166,6 +166,52 @@ paths:
                 $ref: '#/components/schemas/ArrayOfPosts'
         "404":
           description: Invalid user login
+  /post/{postId}/like:
+    put:
+      tags:
+        - post
+      security:
+        - cookieAuth: [ ]
+      summary: Like post by id.
+      description: Liking post by id.
+      operationId: likePost
+      parameters:
+        - in: path
+          name: postId
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the post to get
+      responses:
+        "200":
+          description: Successful operation
+        "401":
+          description: Permission denied
+        "404":
+          description: Invalid post Id
+  /post/{postId}/view:
+    put:
+      tags:
+        - post
+      security:
+        - cookieAuth: [ ]
+      summary: View post by id.
+      description: Viewing post by id.
+      operationId: viewPost
+      parameters:
+        - in: path
+          name: postId
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the post to get
+      responses:
+        "200":
+          description: Successful operation
+        "401":
+          description: Permission denied
+        "404":
+          description: Invalid post Id
   /post/{postId}/update:
     put:
       tags:

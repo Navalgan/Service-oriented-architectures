@@ -1,14 +1,14 @@
 package main
 
 import (
-	"Service-oriented-architectures/internal/task"
+	"Service-oriented-architectures/internal/statistic"
 
 	"log"
 	"net"
 )
 
 func main() {
-	service, err := task.NewService()
+	service, err := statistic.NewService()
 	if err != nil {
 		log.Fatal("")
 	}
@@ -18,7 +18,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Printf("Task service started")
+	log.Printf("Statistic service started")
 
-	log.Fatal(service.GRPCServer.Serve(l))
+	log.Fatal(service.Serve(l))
 }

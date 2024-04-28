@@ -285,6 +285,92 @@ func (s *Service) GetPostsByLogin(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func (s *Service) LikePost(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "Wrong HTTP method", http.StatusBadRequest)
+		return
+	}
+
+	cookie, err := r.Cookie("userLogin")
+	if err != nil {
+		switch {
+		case errors.Is(err, http.ErrNoCookie):
+			http.Error(w, "cookie not found", http.StatusBadRequest)
+		default:
+			log.Println(err)
+			http.Error(w, "server error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	login := cookie.Value
+
+	vars := mux.Vars(r)
+	postId, ok := vars["postId"]
+	if !ok {
+		http.Error(w, "Need post's id", http.StatusNotFound)
+		return
+	}
+
+	var updatePost common.PostText
+	err = json.NewDecoder(r.Body).Decode(&updatePost)
+	if err != nil || len(updatePost.Text) == 0 {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	_, err = s.GRPCClient.UpdatePost(context.Background(), &task_v1.UpdatePostRequest{PostId: postId, Login: login, Text: updatePost.Text})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Service) ViewPost(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "Wrong HTTP method", http.StatusBadRequest)
+		return
+	}
+
+	cookie, err := r.Cookie("userLogin")
+	if err != nil {
+		switch {
+		case errors.Is(err, http.ErrNoCookie):
+			http.Error(w, "cookie not found", http.StatusBadRequest)
+		default:
+			log.Println(err)
+			http.Error(w, "server error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	login := cookie.Value
+
+	vars := mux.Vars(r)
+	postId, ok := vars["postId"]
+	if !ok {
+		http.Error(w, "Need post's id", http.StatusNotFound)
+		return
+	}
+
+	var updatePost common.PostText
+	err = json.NewDecoder(r.Body).Decode(&updatePost)
+	if err != nil || len(updatePost.Text) == 0 {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	_, err = s.GRPCClient.UpdatePost(context.Background(), &task_v1.UpdatePostRequest{PostId: postId, Login: login, Text: updatePost.Text})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func (s *Service) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Wrong HTTP method", http.StatusBadRequest)
