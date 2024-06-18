@@ -10,7 +10,7 @@ import (
 func main() {
 	service, err := task.NewService()
 	if err != nil {
-		log.Fatal("")
+		log.Fatal(err)
 	}
 
 	l, err := net.Listen("tcp", ":9090")

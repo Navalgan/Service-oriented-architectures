@@ -17,5 +17,5 @@ func main() {
 
 	log.Printf("Statistic service started")
 
-	service.Run(ctx)
+	service.Run()
 }

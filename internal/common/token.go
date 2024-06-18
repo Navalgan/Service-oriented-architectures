@@ -1,23 +1,51 @@
 package common
 
 import (
-	"github.com/google/uuid"
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func NewToken(userID uuid.UUID, secret string, duration time.Duration) (string, error) {
-	token := jwt.New(jwt.SigningMethodHS256)
+type Claims struct {
+	UserID string `json:"user_id"`
+	Login  string `json:"login"`
+	jwt.RegisteredClaims
+}
 
-	claims := token.Claims.(jwt.MapClaims)
-	claims["uuid"] = userID
-	claims["exp"] = time.Now().Add(duration).Unix()
+func NewToken(userID string, login string, duration time.Duration) (string, error) {
+	claims := &Claims{
+		UserID: userID,
+		Login:  login,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
+		},
+	}
 
-	tokenString, err := token.SignedString([]byte(secret))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, err := token.SignedString([]byte("some-secret-key"))
 	if err != nil {
 		return "", err
 	}
 
 	return tokenString, nil
+}
+
+func VerifyToken(tokenString string) (*Claims, error) {
+	claims := &Claims{}
+
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte("some-secret-key"), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	return claims, nil
 }

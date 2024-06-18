@@ -2,8 +2,8 @@ package main
 
 import (
 	"Service-oriented-architectures/internal/major"
-	"context"
 
+	"context"
 	"log"
 	"net/http"
 
@@ -24,8 +24,8 @@ func main() {
 	server.HandleFunc("/user/auth", service.UserAuth)
 	server.HandleFunc("/user/update", service.UserUpdate)
 	server.HandleFunc("/post/create", service.CreatePost)
-	server.HandleFunc("/post/{postId}", service.GetPostById)
-	server.HandleFunc("/posts/{login}", service.GetPostsByLogin)
+	server.HandleFunc("/post/{postId}", service.GetPostByID)
+	server.HandleFunc("/posts/{login}", service.GetPostsByUser)
 	server.HandleFunc("/post/{postId}/like", service.LikePost)
 	server.HandleFunc("/post/{postId}/view", service.ViewPost)
 	server.HandleFunc("/post/{postId}/update", service.UpdatePost)

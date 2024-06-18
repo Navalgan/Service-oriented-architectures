@@ -1,7 +1,8 @@
 package storage
 
 import (
-	"Service-oriented-architectures/internal/common/gen/go"
+	"Service-oriented-architectures/internal/common/gen/go/task/proto"
+
 	"log"
 	"time"
 
@@ -18,12 +19,7 @@ func NewDataBase() (*DataBase, error) {
 
 	cluster := gocql.NewCluster("cassandra1", "cassandra2", "cassandra3")
 	cluster.Consistency = gocql.Quorum
-	cluster.ProtoVersion = 4
 	cluster.ConnectTimeout = time.Second * 10
-	cluster.Authenticator = gocql.PasswordAuthenticator{
-		Username: "Username",
-		Password: "Password",
-	}
 
 	session, err := cluster.CreateSession()
 	if err != nil {
@@ -40,7 +36,7 @@ func NewDataBase() (*DataBase, error) {
 
 	log.Print("KEYSPACE ready")
 
-	const query = "CREATE TABLE IF NOT EXISTS SocialNetwork.Posts (postId uuid, lastUpdate bigint, author text, postText text, PRIMARY KEY (postId, author));"
+	const query = "CREATE TABLE IF NOT EXISTS SocialNetwork.Posts (post_id uuid, author_id UUID, last_update bigint, post_text text, PRIMARY KEY (post_id, author_id));"
 
 	if err = session.Query(query).Exec(); err != nil {
 		log.Println(err)
@@ -55,31 +51,31 @@ func NewDataBase() (*DataBase, error) {
 }
 
 func (db *DataBase) CreatePost(req *task_v1.PostRequest) (*task_v1.PostResponse, error) {
-	const query = "INSERT INTO SocialNetwork.Posts (postId, lastUpdate, author, postText) VALUES (?, ?, ?, ?)"
+	const query = "INSERT INTO SocialNetwork.Posts (post_id, author_id, last_update, post_text) VALUES (?, ?, ?, ?)"
 
-	postId := uuid.NewString()
+	postID := uuid.NewString()
 
 	curTime := time.Now().UnixMilli()
 
-	if err := db.s.Query(query, postId, curTime, req.Login, req.Text).Exec(); err != nil {
+	if err := db.s.Query(query, postID, req.UserID, curTime, req.Text).Exec(); err != nil {
 		log.Println(err)
 		return nil, err
 	}
 
 	return &task_v1.PostResponse{
-		PostId: postId,
-		Date:   curTime,
-		Author: req.Login,
-		Text:   req.Text,
+		PostID:   postID,
+		AuthorID: req.UserID,
+		Date:     curTime,
+		Text:     req.Text,
 	}, nil
 }
 
-func (db *DataBase) GetPostById(req *task_v1.PostIdRequest) (*task_v1.PostResponse, error) {
-	const query = "SELECT postId, lastUpdate, author, postText FROM SocialNetwork.Posts WHERE postId=?"
+func (db *DataBase) GetPostByID(req *task_v1.PostIDRequest) (*task_v1.PostResponse, error) {
+	const query = "SELECT post_id, author_id, last_update, post_text FROM SocialNetwork.Posts WHERE post_id=?"
 
 	var post task_v1.PostResponse
 
-	if err := db.s.Query(query, req.PostId).Scan(&post.PostId, &post.Date, &post.Author, &post.Text); err != nil {
+	if err := db.s.Query(query, req.PostID).Scan(&post.PostID, &post.AuthorID, &post.Date, &post.Text); err != nil {
 		log.Println(err)
 		return nil, err
 	}
@@ -87,15 +83,15 @@ func (db *DataBase) GetPostById(req *task_v1.PostIdRequest) (*task_v1.PostRespon
 	return &post, nil
 }
 
-func (db *DataBase) GetPostsByLogin(req *task_v1.LoginRequest) (*task_v1.PostsResponse, error) {
-	const query = "SELECT postId, lastUpdate, author, postText FROM SocialNetwork.Posts WHERE author=? ALLOW FILTERING"
+func (db *DataBase) GetPostsByUser(req *task_v1.UserRequest) (*task_v1.PostsResponse, error) {
+	const query = "SELECT post_id, author_id, last_update, post_text FROM SocialNetwork.Posts WHERE author_id=? ALLOW FILTERING"
 
 	var posts task_v1.PostsResponse
 
-	scanner := db.s.Query(query, req.Login).Iter().Scanner()
+	scanner := db.s.Query(query, req.UserID).Iter().Scanner()
 	for scanner.Next() {
 		var post task_v1.PostResponse
-		err := scanner.Scan(&post.PostId, &post.Date, &post.Author, &post.Text)
+		err := scanner.Scan(&post.PostID, &post.AuthorID, &post.Date, &post.Text)
 		if err != nil {
 			log.Println(err)
 			return nil, err
@@ -110,9 +106,9 @@ func (db *DataBase) GetPostsByLogin(req *task_v1.LoginRequest) (*task_v1.PostsRe
 }
 
 func (db *DataBase) UpdatePost(req *task_v1.UpdatePostRequest) error {
-	const query = "UPDATE SocialNetwork.Posts SET lastUpdate=?, postText=? WHERE postId=? and author=?"
+	const query = "UPDATE SocialNetwork.Posts SET last_update=?, post_text=? WHERE post_id=? and author_id=?"
 
-	if err := db.s.Query(query, time.Now().Unix(), req.Text, req.PostId, req.Login).Exec(); err != nil {
+	if err := db.s.Query(query, time.Now().Unix(), req.Text, req.PostID, req.UserID).Exec(); err != nil {
 		log.Println(err)
 	}
 
@@ -120,9 +116,9 @@ func (db *DataBase) UpdatePost(req *task_v1.UpdatePostRequest) error {
 }
 
 func (db *DataBase) DeletePost(req *task_v1.DeletePostRequest) error {
-	const query = "DELETE FROM SocialNetwork.Posts WHERE postId=? and author=?"
+	const query = "DELETE FROM SocialNetwork.Posts WHERE post_id=? and author_id=?"
 
-	if err := db.s.Query(query, req.PostId, req.Login).Exec(); err != nil {
+	if err := db.s.Query(query, req.PostID, req.UserID).Exec(); err != nil {
 		log.Println(err)
 	}
 

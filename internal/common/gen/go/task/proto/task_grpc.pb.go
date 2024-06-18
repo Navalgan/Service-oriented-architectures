@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v5.26.1
-// source: internal/task/proto/task.proto
+// source: task/proto/task.proto
 
 package task_v1
 
@@ -24,8 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TaskClient interface {
 	CreatePost(ctx context.Context, in *PostRequest, opts ...grpc.CallOption) (*PostResponse, error)
-	GetPostById(ctx context.Context, in *PostIdRequest, opts ...grpc.CallOption) (*PostResponse, error)
-	GetPostsByLogin(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*PostsResponse, error)
+	GetPostByID(ctx context.Context, in *PostIDRequest, opts ...grpc.CallOption) (*PostResponse, error)
+	GetPostsByUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*PostsResponse, error)
 	UpdatePost(ctx context.Context, in *UpdatePostRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeletePost(ctx context.Context, in *DeletePostRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -47,18 +47,18 @@ func (c *taskClient) CreatePost(ctx context.Context, in *PostRequest, opts ...gr
 	return out, nil
 }
 
-func (c *taskClient) GetPostById(ctx context.Context, in *PostIdRequest, opts ...grpc.CallOption) (*PostResponse, error) {
+func (c *taskClient) GetPostByID(ctx context.Context, in *PostIDRequest, opts ...grpc.CallOption) (*PostResponse, error) {
 	out := new(PostResponse)
-	err := c.cc.Invoke(ctx, "/task.Task/GetPostById", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/task.Task/GetPostByID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *taskClient) GetPostsByLogin(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*PostsResponse, error) {
+func (c *taskClient) GetPostsByUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*PostsResponse, error) {
 	out := new(PostsResponse)
-	err := c.cc.Invoke(ctx, "/task.Task/GetPostsByLogin", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/task.Task/GetPostsByUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -88,8 +88,8 @@ func (c *taskClient) DeletePost(ctx context.Context, in *DeletePostRequest, opts
 // for forward compatibility
 type TaskServer interface {
 	CreatePost(context.Context, *PostRequest) (*PostResponse, error)
-	GetPostById(context.Context, *PostIdRequest) (*PostResponse, error)
-	GetPostsByLogin(context.Context, *LoginRequest) (*PostsResponse, error)
+	GetPostByID(context.Context, *PostIDRequest) (*PostResponse, error)
+	GetPostsByUser(context.Context, *UserRequest) (*PostsResponse, error)
 	UpdatePost(context.Context, *UpdatePostRequest) (*emptypb.Empty, error)
 	DeletePost(context.Context, *DeletePostRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedTaskServer()
@@ -102,11 +102,11 @@ type UnimplementedTaskServer struct {
 func (UnimplementedTaskServer) CreatePost(context.Context, *PostRequest) (*PostResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePost not implemented")
 }
-func (UnimplementedTaskServer) GetPostById(context.Context, *PostIdRequest) (*PostResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetPostById not implemented")
+func (UnimplementedTaskServer) GetPostByID(context.Context, *PostIDRequest) (*PostResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPostByID not implemented")
 }
-func (UnimplementedTaskServer) GetPostsByLogin(context.Context, *LoginRequest) (*PostsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetPostsByLogin not implemented")
+func (UnimplementedTaskServer) GetPostsByUser(context.Context, *UserRequest) (*PostsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPostsByUser not implemented")
 }
 func (UnimplementedTaskServer) UpdatePost(context.Context, *UpdatePostRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdatePost not implemented")
@@ -145,38 +145,38 @@ func _Task_CreatePost_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Task_GetPostById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PostIdRequest)
+func _Task_GetPostByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PostIDRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TaskServer).GetPostById(ctx, in)
+		return srv.(TaskServer).GetPostByID(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/task.Task/GetPostById",
+		FullMethod: "/task.Task/GetPostByID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TaskServer).GetPostById(ctx, req.(*PostIdRequest))
+		return srv.(TaskServer).GetPostByID(ctx, req.(*PostIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Task_GetPostsByLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LoginRequest)
+func _Task_GetPostsByUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TaskServer).GetPostsByLogin(ctx, in)
+		return srv.(TaskServer).GetPostsByUser(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/task.Task/GetPostsByLogin",
+		FullMethod: "/task.Task/GetPostsByUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TaskServer).GetPostsByLogin(ctx, req.(*LoginRequest))
+		return srv.(TaskServer).GetPostsByUser(ctx, req.(*UserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -229,12 +229,12 @@ var Task_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Task_CreatePost_Handler,
 		},
 		{
-			MethodName: "GetPostById",
-			Handler:    _Task_GetPostById_Handler,
+			MethodName: "GetPostByID",
+			Handler:    _Task_GetPostByID_Handler,
 		},
 		{
-			MethodName: "GetPostsByLogin",
-			Handler:    _Task_GetPostsByLogin_Handler,
+			MethodName: "GetPostsByUser",
+			Handler:    _Task_GetPostsByUser_Handler,
 		},
 		{
 			MethodName: "UpdatePost",
@@ -246,5 +246,5 @@ var Task_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "internal/task/proto/task.proto",
+	Metadata: "task/proto/task.proto",
 }

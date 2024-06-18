@@ -10,13 +10,11 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-
-	"github.com/google/uuid"
 )
 
 type UserDB struct {
 	// The user's id
-	UserID uuid.UUID `bson:"user_id,omitempty"`
+	UserID string `bson:"user_id,omitempty"`
 	// Must be unique in the system
 	Login string `bson:"login,omitempty"`
 	// Can't be empty and will not change
@@ -65,8 +63,8 @@ func (db *DataBase) Join(newUser common.UserLogPas) error {
 	return nil
 }
 
-func (db *DataBase) Update(login string, newInfo common.UserInfo) error {
-	filter := bson.D{{"login", login}}
+func (db *DataBase) Update(userID string, newInfo common.UserInfo) error {
+	filter := bson.D{{"user_id", userID}}
 	update := bson.D{{"$set", bson.D{
 		{"name", newInfo.Name},
 		{"surname", newInfo.Surname},
@@ -91,6 +89,23 @@ func (db *DataBase) Update(login string, newInfo common.UserInfo) error {
 
 func (db *DataBase) GetUser(userLogin string) (*common.UserLogPas, error) {
 	filter := bson.D{{"login", userLogin}}
+
+	var result UserDB
+	err := db.c.FindOne(context.TODO(), filter).Decode(&result)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return &common.UserLogPas{
+		UserID:   result.UserID,
+		Login:    result.Login,
+		Password: result.Password,
+	}, nil
+}
+
+func (db *DataBase) GetUserByID(userID string) (*common.UserLogPas, error) {
+	filter := bson.D{{"user_id", userID}}
 
 	var result UserDB
 	err := db.c.FindOne(context.TODO(), filter).Decode(&result)
