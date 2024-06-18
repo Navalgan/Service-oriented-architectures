@@ -1,0 +1,8 @@
+@startuml
+map Post {
+ id => uuid
+ last_update => int
+ author => string
+ post_text => string
+}
+@enduml

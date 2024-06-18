@@ -1,24 +1,21 @@
 package main
 
 import (
-	"Service-oriented-architectures/internal/task"
+	"Service-oriented-architectures/internal/statistic"
 
+	"context"
 	"log"
-	"net"
 )
 
 func main() {
-	service, err := task.NewService()
-	if err != nil {
-		log.Fatal("")
-	}
+	ctx := context.Background()
 
-	l, err := net.Listen("tcp", ":9090")
+	service, err := statistic.NewService(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Printf("Task service started")
+	log.Printf("Statistic service started")
 
-	log.Fatal(service.GRPCServer.Serve(l))
+	service.Run()
 }

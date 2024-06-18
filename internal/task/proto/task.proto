@@ -5,14 +5,13 @@ package task;
 option go_package = "task.v1";
 
 import "google/protobuf/empty.proto";
-import "google/protobuf/timestamp.proto";
 
 service Task {
   rpc CreatePost(PostRequest) returns (PostResponse);
 
-  rpc GetPostById(PostIdRequest) returns (PostResponse);
+  rpc GetPostByID(PostIDRequest) returns (PostResponse);
 
-  rpc GetPostsByLogin(LoginRequest) returns (PostsResponse);
+  rpc GetPostsByUser(UserRequest) returns (PostsResponse);
 
   rpc UpdatePost(UpdatePostRequest) returns (google.protobuf.Empty);
 
@@ -20,28 +19,28 @@ service Task {
 }
 
 message PostRequest {
-  string login = 1;
+  string userID = 1;
   string text = 2;
 }
 
 message PostResponse {
-  string postId = 1;
-  google.protobuf.Timestamp date = 2;
-  string author = 3;
+  string postID = 1;
+  string authorID = 2;
+  int64 date = 3;
   string text = 4;
 }
 
-message PostIdRequest {
-  string postId = 1;
+message PostIDRequest {
+  string postID = 1;
 }
 
-message LoginRequest {
-  string login = 1;
+message UserRequest {
+  string userID = 1;
 }
 
 message UpdatePostRequest {
-  string postId = 1;
-  string login = 2;
+  string postID = 1;
+  string userID = 2;
   string text = 3;
 }
 
@@ -50,6 +49,6 @@ message PostsResponse {
 }
 
 message DeletePostRequest {
-  string login = 1;
-  string postId = 2;
+  string userID = 1;
+  string postID = 2;
 }
