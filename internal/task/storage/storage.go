@@ -36,7 +36,7 @@ func NewDataBase() (*DataBase, error) {
 
 	log.Print("KEYSPACE ready")
 
-	const query = "CREATE TABLE IF NOT EXISTS SocialNetwork.Posts (post_id uuid, author_id UUID, last_update bigint, post_text text, PRIMARY KEY (post_id, author_id));"
+	const query = "CREATE TABLE IF NOT EXISTS SocialNetwork.Posts (post_id uuid, author_id uuid, last_update bigint, post_text text, PRIMARY KEY (post_id, author_id));"
 
 	if err = session.Query(query).Exec(); err != nil {
 		log.Println(err)

@@ -18,17 +18,7 @@ services:
     depends_on:
       - mongo
       - task
-      - kafka
-
-  statistic:
-    build:
-      context: .
-      dockerfile: ./cmd/statistic/Dockerfile
-    restart: always
-    ports:
-      - "7070:7070"
-    depends_on:
-      - kafka
+      - statistic
 
   task:
     build:
@@ -41,6 +31,16 @@ services:
       - cassandra1
       - cassandra2
       - cassandra3
+
+  statistic:
+    build:
+      context: .
+      dockerfile: ./cmd/statistic/Dockerfile
+    restart: always
+    ports:
+      - "7070:7070"
+    depends_on:
+      - kafka
 
   cassandra1:
     image: cassandra:latest

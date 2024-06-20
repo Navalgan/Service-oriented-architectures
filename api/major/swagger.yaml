@@ -142,6 +142,30 @@ paths:
           description: Invalid login
         "404":
           description: Invalid post Id
+  /post/{postId}/stat:
+    get:
+      tags:
+        - post
+      security: [ ]
+      summary: Get post's like and view counts by post id
+      description: Getting post's like and view counts by post id.
+      operationId: getPostStatById
+      parameters:
+        - in: path
+          name: postId
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the post to get post's stat
+      responses:
+        "200":
+          description: Successful operation. Return like and view counts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostStat'
+        "404":
+          description: Invalid post Id
   /posts/{login}:
     get:
       tags:
@@ -265,6 +289,49 @@ paths:
           description: Permission denied
         "404":
           description: Invalid post Id
+  /top/users:
+    get:
+      tags:
+        - top
+      security: [ ]
+      summary: Get users top
+      description: Get users top.
+      operationId: usersTop
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayOfTopUsers'
+        "400":
+          description: Server error
+  /top/posts:
+    get:
+      tags:
+        - top
+      security: [ ]
+      summary: Get top of posts by likes or views
+      description: Getting post by id.
+      operationId: getPostTop
+      parameters:
+        - in: query
+          name: by
+          schema:
+            type: string
+          required: true
+          description: Name of the sorting field
+      responses:
+        "200":
+          description: Successful operation. Return the post.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayOfTopPosts'
+        "401":
+          description: Invalid login
+        "404":
+          description: Invalid post Id
 components:
   schemas:
     User:
@@ -331,6 +398,18 @@ components:
           type: string
           description: The post's text
           example: "What would your name be in the bank: First name is the card number, Last name is the number on the back."
+    PostStat:
+      title: PostStat
+      type: object
+      properties:
+        likes:
+          type: integer
+          description: The id of post
+          example: 228
+        views:
+          type: integer
+          description: The id of post
+          example: 1337
     ArrayOfPosts:
       type: array
       items:
@@ -352,6 +431,36 @@ components:
             type: string
             description: The post's text
             example: "What would your name be in the bank: First name is the card number, Last name is the number on the back."
+    ArrayOfTopPosts:
+      type: array
+      items:
+        type: object
+        properties:
+          postId:
+            type: integer
+            description: The uuid of post
+            example: 228
+          author:
+            type: string
+            description: The author of post
+            example: Jesus
+          stat:
+            type: integer
+            description: Number of likes or views
+            example: 1337
+    ArrayOfTopUsers:
+      type: array
+      items:
+        type: object
+        properties:
+          login:
+            type: string
+            description: The login of user
+            example: "Jesus"
+          likes:
+            type: integer
+            description: Sum of likes count
+            example: 228
   securitySchemes:
     cookieAuth:
       type: apiKey

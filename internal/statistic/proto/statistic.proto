@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package statistic;
+
+option go_package = "statistic.v1";
+
+service Statistic {
+  rpc GetPostStatByID(PostIDRequest) returns (PostStatResponse);
+
+  rpc GetTopPosts(TopPostsRequest) returns (TopPostsResponse);
+
+  rpc GetTopUsers(TopUsersRequest) returns (TopUsersResponse);
+}
+
+message PostIDRequest {
+  string postID = 1;
+}
+
+message PostStatResponse {
+  uint64 likes = 1;
+  uint64 views = 2;
+}
+
+message TopPostsRequest {
+  string orderBy = 1;
+}
+
+message PostStatistic {
+  string postID = 1;
+  string authorID = 2;
+  uint64 count = 3;
+}
+
+message TopPostsResponse {
+  repeated PostStatistic posts = 1;
+}
+
+message TopUsersRequest {
+}
+
+message UserStatistic {
+  string userID = 1;
+  uint64 count = 2;
+}
+
+message TopUsersResponse {
+  repeated UserStatistic users = 1;
+}
