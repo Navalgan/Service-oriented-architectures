@@ -2,13 +2,11 @@ package task
 
 import (
 	"Service-oriented-architectures/internal/task/grpc"
-	"Service-oriented-architectures/internal/task/storage"
 
 	"google.golang.org/grpc"
 )
 
 type Service struct {
-	DB         *storage.DataBase
 	GRPCServer *grpc.Server
 }
 

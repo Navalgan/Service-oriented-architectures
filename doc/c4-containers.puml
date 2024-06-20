@@ -34,7 +34,9 @@ System_Boundary(statistic, "Сервис статистики") {
     Rel_R(statistics_admin, statistics_DB, " ")
 }
 
-Rel(kafka, statistics_admin, "Обработка событий")
+Rel(admin, statistics_admin, "Запрос статистики", "gRPC")
+
+Rel(kafka, statistics_DB, "Обработка событий")
 
 Rel(statistics_admin, admin, "Отдача статистики пользователю", "gRPC")
 

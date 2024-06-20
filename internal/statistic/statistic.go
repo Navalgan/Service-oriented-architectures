@@ -1,29 +1,23 @@
 package statistic
 
 import (
-	"Service-oriented-architectures/internal/statistic/storage"
+	"Service-oriented-architectures/internal/statistic/grpc"
 
-	"context"
-	"log"
+	"google.golang.org/grpc"
 )
 
 type Service struct {
-	DB *storage.DataBase
+	GRPCServer *grpc.Server
 }
 
-func NewService(ctx context.Context) (*Service, error) {
-	db, err := storage.NewDataBase(ctx)
+func NewService() (*Service, error) {
+	gRPCServer := grpc.NewServer()
 
-	if err != nil {
-		log.Fatalf("Failed to db connect: %v", err)
+	if err := grpcstatistic.Register(gRPCServer); err != nil {
+		return nil, err
 	}
 
 	return &Service{
-		DB: db,
+		GRPCServer: gRPCServer,
 	}, nil
-}
-
-func (s *Service) Run() {
-	for {
-	}
 }

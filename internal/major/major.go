@@ -2,6 +2,7 @@ package major
 
 import (
 	"Service-oriented-architectures/internal/common"
+	"Service-oriented-architectures/internal/common/gen/go/statistic/proto"
 	"Service-oriented-architectures/internal/common/gen/go/task/proto"
 	"Service-oriented-architectures/internal/major/storage"
 
@@ -11,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -31,11 +33,11 @@ const (
 )
 
 type Service struct {
-	DB                *storage.DataBase
-	GRPCClient        task_v1.TaskClient
-	StatisticProducer sarama.SyncProducer
-	StatisticConsume  sarama.Consumer
-	AnswerConsumer    sarama.PartitionConsumer
+	DB                  *storage.DataBase
+	GRPCTaskClient      task_v1.TaskClient
+	GRPCStatisticClient statistic_v1.StatisticClient
+	StatisticProducer   sarama.SyncProducer
+	AnswerConsumer      sarama.PartitionConsumer
 }
 
 func NewService(ctx context.Context) (*Service, error) {
@@ -54,14 +56,23 @@ func NewService(ctx context.Context) (*Service, error) {
 
 	log.Println("Connected to MongoDB")
 
-	con, err := grpc.Dial("task:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conTask, err := grpc.Dial("task:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	gRPCClient := task_v1.NewTaskClient(con)
+	gRPCTaskClient := task_v1.NewTaskClient(conTask)
 
-	log.Println("Connected to gRPC")
+	log.Println("Connected to gRPC for task")
+
+	conStatistic, err := grpc.Dial("statistic:7070", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	gRPCStatisticClient := statistic_v1.NewStatisticClient(conStatistic)
+
+	log.Println("Connected to gRPC for statistic")
 
 	producer, err := sarama.NewSyncProducer([]string{"kafka:9092"}, nil)
 	if err != nil {
@@ -71,9 +82,10 @@ func NewService(ctx context.Context) (*Service, error) {
 	log.Println("Statistic producer created")
 
 	return &Service{
-		DB:                db,
-		GRPCClient:        gRPCClient,
-		StatisticProducer: producer,
+		DB:                  db,
+		GRPCTaskClient:      gRPCTaskClient,
+		GRPCStatisticClient: gRPCStatisticClient,
+		StatisticProducer:   producer,
 	}, nil
 }
 
@@ -260,7 +272,7 @@ func (s *Service) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := s.GRPCClient.CreatePost(context.Background(), &task_v1.PostRequest{UserID: claims.UserID, Text: postText.Text})
+	resp, err := s.GRPCTaskClient.CreatePost(context.Background(), &task_v1.PostRequest{UserID: claims.UserID, Text: postText.Text})
 	if err != nil {
 		log.Println("Cassandra error")
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -291,8 +303,38 @@ func (s *Service) GetPostByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := s.GRPCClient.GetPostByID(context.Background(), &task_v1.PostIDRequest{PostID: postID})
+	resp, err := s.GRPCTaskClient.GetPostByID(context.Background(), &task_v1.PostIDRequest{PostID: postID})
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Service) GetPostStatByID(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Wrong HTTP method", http.StatusBadRequest)
+		return
+	}
+
+	vars := mux.Vars(r)
+	postID, ok := vars["postId"]
+	if !ok {
+		http.Error(w, "Need post's id", http.StatusNotFound)
+		return
+	}
+
+	resp, err := s.GRPCStatisticClient.GetPostStatByID(context.Background(), &statistic_v1.PostIDRequest{PostID: postID})
+	if err != nil {
+		log.Println("GRPC error")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -326,7 +368,7 @@ func (s *Service) GetPostsByUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := s.GRPCClient.GetPostsByUser(context.Background(), &task_v1.UserRequest{UserID: user.UserID})
+	resp, err := s.GRPCTaskClient.GetPostsByUser(context.Background(), &task_v1.UserRequest{UserID: user.UserID})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -377,12 +419,18 @@ func (s *Service) LikePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	post, err := s.GRPCTaskClient.GetPostByID(context.Background(), &task_v1.PostIDRequest{PostID: postID})
+	if err != nil {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
 	requestID := uuid.New().String()
 
 	msg := &sarama.ProducerMessage{
 		Topic: "likes",
 		Key:   sarama.StringEncoder(requestID),
-		Value: sarama.StringEncoder(postID + "," + claims.UserID + "," + strconv.FormatInt(time.Now().Unix(), 10)),
+		Value: sarama.StringEncoder(postID + "," + post.AuthorID + "," + claims.UserID + "," + strconv.FormatInt(time.Now().Unix(), 10)),
 	}
 
 	_, _, err = s.StatisticProducer.SendMessage(msg)
@@ -430,12 +478,18 @@ func (s *Service) ViewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	post, err := s.GRPCTaskClient.GetPostByID(context.Background(), &task_v1.PostIDRequest{PostID: postID})
+	if err != nil {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
 	requestID := uuid.New().String()
 
 	msg := &sarama.ProducerMessage{
 		Topic: "views",
 		Key:   sarama.StringEncoder(requestID),
-		Value: sarama.StringEncoder(postID + "," + claims.UserID + "," + strconv.FormatInt(time.Now().Unix(), 10)),
+		Value: sarama.StringEncoder(postID + "," + post.AuthorID + "," + claims.UserID + "," + strconv.FormatInt(time.Now().Unix(), 10)),
 	}
 
 	_, _, err = s.StatisticProducer.SendMessage(msg)
@@ -489,7 +543,7 @@ func (s *Service) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = s.GRPCClient.UpdatePost(context.Background(), &task_v1.UpdatePostRequest{PostID: postID, UserID: claims.UserID, Text: updatePost.Text})
+	_, err = s.GRPCTaskClient.UpdatePost(context.Background(), &task_v1.UpdatePostRequest{PostID: postID, UserID: claims.UserID, Text: updatePost.Text})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -532,8 +586,90 @@ func (s *Service) DeletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = s.GRPCClient.DeletePost(context.Background(), &task_v1.DeletePostRequest{PostID: postID, UserID: claims.UserID})
+	_, err = s.GRPCTaskClient.DeletePost(context.Background(), &task_v1.DeletePostRequest{PostID: postID, UserID: claims.UserID})
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Service) GetTopUsers(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Wrong HTTP method", http.StatusBadRequest)
+		return
+	}
+
+	ctx := context.Background()
+
+	resp, err := s.GRPCStatisticClient.GetTopUsers(ctx, &statistic_v1.TopUsersRequest{})
+	if err != nil {
+		log.Println("GRPC error")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	finalTop := common.TopUsers{}
+	for _, user := range resp.Users {
+		author, err := s.DB.GetUserByID(user.UserID)
+		if err != nil {
+			log.Println("Mongo error on author " + user.UserID)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		finalTop.Users = append(finalTop.Users, common.UserStatistic{Login: author.Login, Count: user.Count})
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	err = json.NewEncoder(w).Encode(finalTop)
+	if err != nil {
+		log.Println("Json encoder error")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Service) GetTopPosts(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Wrong HTTP method", http.StatusBadRequest)
+		return
+	}
+
+	orderBy := r.URL.Query().Get("by")
+	if strings.Compare(orderBy, "Likes") != 0 && strings.Compare(orderBy, "Views") != 0 {
+		http.Error(w, "Wrong orderBy", http.StatusBadRequest)
+		return
+	}
+
+	ctx := context.Background()
+
+	resp, err := s.GRPCStatisticClient.GetTopPosts(ctx, &statistic_v1.TopPostsRequest{OrderBy: orderBy})
+	if err != nil {
+		log.Println("GRPC error")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	finalTop := common.TopPosts{}
+	for _, post := range resp.Posts {
+		author, err := s.DB.GetUserByID(post.AuthorID)
+		if err != nil {
+			log.Println("Mongo error on author " + post.AuthorID)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		finalTop.Posts = append(finalTop.Posts, common.PostStatistic{PostID: post.PostID, Author: author.Login, Count: post.Count})
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	err = json.NewEncoder(w).Encode(finalTop)
+	if err != nil {
+		log.Println("Json encoder error")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

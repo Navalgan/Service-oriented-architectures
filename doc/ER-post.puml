@@ -1,8 +1,8 @@
 @startuml
 map Post {
  id => uuid
+ author_id => uuid
  last_update => int
- author => string
  post_text => string
 }
 @enduml
