@@ -38,9 +38,10 @@ type Service struct {
 	GRPCStatisticClient statistic_v1.StatisticClient
 	StatisticProducer   sarama.SyncProducer
 	AnswerConsumer      sarama.PartitionConsumer
+	JWTKey              []byte
 }
 
-func NewService(ctx context.Context) (*Service, error) {
+func NewService(jwtKey string, ctx context.Context) (*Service, error) {
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://mongo:27017"))
 	if err != nil {
 		log.Fatalf("Failed to consume partition: %v", err)
@@ -86,6 +87,7 @@ func NewService(ctx context.Context) (*Service, error) {
 		GRPCTaskClient:      gRPCTaskClient,
 		GRPCStatisticClient: gRPCStatisticClient,
 		StatisticProducer:   producer,
+		JWTKey:              []byte(jwtKey),
 	}, nil
 }
 
@@ -125,7 +127,7 @@ func (s *Service) UserJoin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := common.NewToken(newUser.UserID, newUser.Login, time.Minute*10)
+	token, err := common.NewToken(s.JWTKey, newUser.UserID, newUser.Login, time.Minute*10)
 	if err != nil {
 		log.Println("failed to generate token")
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -167,7 +169,7 @@ func (s *Service) UserAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := common.NewToken(dbUser.UserID, dbUser.Login, time.Minute*10)
+	token, err := common.NewToken(s.JWTKey, dbUser.UserID, dbUser.Login, time.Minute*10)
 	if err != nil {
 		log.Println("failed to generate token")
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -210,7 +212,7 @@ func (s *Service) UserUpdate(w http.ResponseWriter, r *http.Request) {
 
 	token := cookie.Value
 
-	claims, err := common.VerifyToken(token)
+	claims, err := common.VerifyToken(s.JWTKey, token)
 	if err != nil {
 		log.Println("Wrong token")
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -257,7 +259,7 @@ func (s *Service) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	token := cookie.Value
 
-	claims, err := common.VerifyToken(token)
+	claims, err := common.VerifyToken(s.JWTKey, token)
 	if err != nil {
 		log.Println("Wrong token")
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -405,7 +407,7 @@ func (s *Service) LikePost(w http.ResponseWriter, r *http.Request) {
 
 	token := cookie.Value
 
-	claims, err := common.VerifyToken(token)
+	claims, err := common.VerifyToken(s.JWTKey, token)
 	if err != nil {
 		log.Println("Wrong token")
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -464,7 +466,7 @@ func (s *Service) ViewPost(w http.ResponseWriter, r *http.Request) {
 
 	token := cookie.Value
 
-	claims, err := common.VerifyToken(token)
+	claims, err := common.VerifyToken(s.JWTKey, token)
 	if err != nil {
 		log.Println("Wrong token")
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -522,7 +524,7 @@ func (s *Service) UpdatePost(w http.ResponseWriter, r *http.Request) {
 
 	token := cookie.Value
 
-	claims, err := common.VerifyToken(token)
+	claims, err := common.VerifyToken(s.JWTKey, token)
 	if err != nil {
 		log.Println("Wrong token")
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -572,7 +574,7 @@ func (s *Service) DeletePost(w http.ResponseWriter, r *http.Request) {
 
 	token := cookie.Value
 
-	claims, err := common.VerifyToken(token)
+	claims, err := common.VerifyToken(s.JWTKey, token)
 	if err != nil {
 		log.Println("Wrong token")
 		http.Error(w, err.Error(), http.StatusBadRequest)

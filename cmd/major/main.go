@@ -8,17 +8,24 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/spf13/pflag"
+)
+
+var (
+	flagJwtKey = pflag.String("jwt-key", "", "the jwt key")
 )
 
 func main() {
-	server := mux.NewRouter()
+	pflag.Parse()
 
 	ctx := context.Background()
 
-	service, err := major.NewService(ctx)
+	service, err := major.NewService(*flagJwtKey, ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	server := mux.NewRouter()
 
 	server.HandleFunc("/user/join", service.UserJoin)
 	server.HandleFunc("/user/auth", service.UserAuth)

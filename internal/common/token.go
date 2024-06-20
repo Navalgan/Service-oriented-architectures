@@ -13,7 +13,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func NewToken(userID string, login string, duration time.Duration) (string, error) {
+func NewToken(jwtKey []byte, userID string, login string, duration time.Duration) (string, error) {
 	claims := &Claims{
 		UserID: userID,
 		Login:  login,
@@ -24,7 +24,7 @@ func NewToken(userID string, login string, duration time.Duration) (string, erro
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := token.SignedString([]byte("some-secret-key"))
+	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
 		return "", err
 	}
@@ -32,13 +32,12 @@ func NewToken(userID string, login string, duration time.Duration) (string, erro
 	return tokenString, nil
 }
 
-func VerifyToken(tokenString string) (*Claims, error) {
+func VerifyToken(jwtKey []byte, tokenString string) (*Claims, error) {
 	claims := &Claims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte("some-secret-key"), nil
+		return jwtKey, nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
