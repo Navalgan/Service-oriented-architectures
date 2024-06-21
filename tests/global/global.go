@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Service-oriented-architectures/internal/common"
+	statistic_v1 "Service-oriented-architectures/internal/common/gen/go/statistic/proto"
 	task_v1 "Service-oriented-architectures/internal/common/gen/go/task/proto"
 	"bytes"
 	"encoding/json"
@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Jar struct {
@@ -43,26 +44,33 @@ type User struct {
 	Posts map[string]*task_v1.PostResponse
 }
 
-func GetTopUsers(client *http.Client, users []User) bool {
-	finalTop := common.TopUsers{}
+func GetPostsStat(client *http.Client, users []User) bool {
+	for i, user := range users {
+		for _, post := range user.Posts {
+			resp, err := client.Get("http://localhost:8080/post/" + post.PostID + "/stat")
+			if err != nil {
+				return false
+			}
+			defer resp.Body.Close()
 
-	resp, err := client.Get("http://localhost:8080/top/users")
-	if err != nil {
-		return false
-	}
-	defer resp.Body.Close()
+			postStat := statistic_v1.PostStatResponse{}
+			if err = json.NewDecoder(resp.Body).Decode(&postStat); err != nil {
+				log.Fatal(err)
+			}
 
-	if err = json.NewDecoder(resp.Body).Decode(&finalTop); err != nil {
-		log.Fatal(err)
-	}
-
-	if len(finalTop.Users) != 3 {
-		return false
-	}
-
-	for i := 0; i < 3; i++ {
-		if strings.Compare(finalTop.Users[0].Login, users[0].Login) != 0 {
-			return false
+			if i == 0 {
+				if postStat.Likes != 3 {
+					return false
+				}
+			} else if i == 1 {
+				if postStat.Likes != 2 {
+					return false
+				}
+			} else if i == 2 {
+				if postStat.Likes != 0 {
+					return false
+				}
+			}
 		}
 	}
 
@@ -109,7 +117,7 @@ func main() {
 
 	users := make([]User, 0)
 
-	randTest := int(rand.Uint32() % 100)
+	randTest := int(rand.Uint32() % 100000)
 
 	for i := 0; i < 3; i++ {
 		login := "MyTestUser" + strconv.Itoa(randTest+i)
@@ -160,23 +168,10 @@ func main() {
 			log.Fatal(err)
 		}
 
-		for _, postID := range users[0].Posts {
-			req, err := http.NewRequest("PUT", "http://localhost:8080/post/"+postID.PostID+"/like", nil)
-			if err != nil {
-				log.Fatalln(err)
-			}
-
-			_, err = client.Do(req)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-
-		for j := 1; j < 3; j++ {
-			if i == 2 && j == 2 {
+		for j := 0; j < 2; j++ {
+			if i == 2 && j == 1 {
 				break
 			}
-
 			for _, post := range users[j].Posts {
 				req, err := http.NewRequest("PUT", "http://localhost:8080/post/"+post.PostID+"/like", nil)
 				if err != nil {
@@ -187,13 +182,14 @@ func main() {
 				if err != nil {
 					log.Fatal(err)
 				}
-				break
 			}
 		}
 	}
 
-	fmt.Println("Running GetTopUsers")
-	if !GetTopUsers(&client, users) {
+	time.Sleep(time.Second * 5)
+
+	fmt.Println("Running GetPostsStat")
+	if !GetPostsStat(&client, users) {
 		fmt.Println("FAIL")
 		log.Fatal("FAIL")
 	}
