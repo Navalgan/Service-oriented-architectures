@@ -3,15 +3,7 @@
 
 name: Go
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    types:
-      - opened
-      - edited
-      - labeled
-      - unlabeled
+on: [push]
 
 jobs:
 
