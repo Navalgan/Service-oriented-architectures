@@ -5,6 +5,7 @@ import (
 	"Service-oriented-architectures/internal/common/gen/go/statistic/proto"
 	"Service-oriented-architectures/internal/common/gen/go/task/proto"
 	"Service-oriented-architectures/internal/major/storage"
+	"unicode"
 
 	"context"
 	"encoding/json"
@@ -28,8 +29,8 @@ import (
 const (
 	MinLoginLen    = 4
 	MaxLoginLen    = 20
-	MinPasswordLen = 7
-	MaxPasswordLen = 40
+	MinPasswordLen = 8
+	MaxPasswordLen = 120
 )
 
 type Service struct {
@@ -39,6 +40,57 @@ type Service struct {
 	StatisticProducer   sarama.SyncProducer
 	AnswerConsumer      sarama.PartitionConsumer
 	JWTKey              []byte
+}
+
+func CheckLogin(login string) bool {
+	if len(login) < MinLoginLen || len(login) > MaxLoginLen {
+		return false
+	}
+
+	var letterDigit = []*unicode.RangeTable{
+		unicode.Latin,
+		unicode.Number,
+	}
+
+	for _, c := range login {
+		if !unicode.IsOneOf(letterDigit, c) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func CheckPasswordQuality(password string) bool {
+	if len(password) < MinPasswordLen {
+		return false
+	}
+
+	if len(password) > MaxPasswordLen {
+		return false
+	}
+
+	haveNumber := false
+	haveLowercase := false
+	haveUppercase := false
+
+	for _, c := range password {
+		if unicode.IsSpace(c) {
+			return false
+		} else if unicode.IsDigit(c) {
+			haveNumber = true
+		} else if unicode.IsLower(c) {
+			haveLowercase = true
+		} else if unicode.IsUpper(c) {
+			haveUppercase = true
+		}
+	}
+
+	if !haveNumber || !haveLowercase || !haveUppercase {
+		return false
+	}
+
+	return true
 }
 
 func NewService(jwtKey string, ctx context.Context) (*Service, error) {
@@ -104,11 +156,13 @@ func (s *Service) UserJoin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	loginLen := len(newUser.Login)
-	passwordLen := len(newUser.Password)
+	if !CheckLogin(newUser.Login) {
+		http.Error(w, "Incorrect  login", http.StatusBadRequest)
+		return
+	}
 
-	if loginLen < MinLoginLen || loginLen > MaxLoginLen || passwordLen < MinPasswordLen || passwordLen > MaxPasswordLen {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if !CheckPasswordQuality(newUser.Password) {
+		http.Error(w, "Weak password", http.StatusBadRequest)
 		return
 	}
 

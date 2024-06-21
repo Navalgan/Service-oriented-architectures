@@ -2,7 +2,6 @@ package storage
 
 import (
 	"Service-oriented-architectures/internal/common/gen/go/statistic/proto"
-
 	"context"
 	"fmt"
 	"log"
