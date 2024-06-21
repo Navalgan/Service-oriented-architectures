@@ -15,7 +15,7 @@ type DataBase struct {
 }
 
 func NewDataBase() (*DataBase, error) {
-	time.Sleep(10 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	cluster := gocql.NewCluster("cassandra1", "cassandra2", "cassandra3")
 	cluster.Consistency = gocql.Quorum
@@ -98,6 +98,7 @@ func (db *DataBase) GetPostsByUser(req *task_v1.UserRequest) (*task_v1.PostsResp
 		}
 		posts.Posts = append(posts.Posts, &post)
 	}
+
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
