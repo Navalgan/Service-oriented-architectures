@@ -19,7 +19,7 @@ func GetPostsByLogin() {
 
 func main() {
 	createUserBody, _ := json.Marshal(map[string]string{
-		"login":    "Toby1",
+		"login":    "Toby12",
 		"password": "Qwerty12345",
 	})
 	requestCreateUserBody := bytes.NewBuffer(createUserBody)
