@@ -2,10 +2,9 @@ package major
 
 import (
 	"Service-oriented-architectures/internal/common"
+	"Service-oriented-architectures/internal/common/gen/go/posts/proto"
 	"Service-oriented-architectures/internal/common/gen/go/statistic/proto"
-	"Service-oriented-architectures/internal/common/gen/go/task/proto"
 	"Service-oriented-architectures/internal/major/storage"
-	"unicode"
 
 	"context"
 	"encoding/json"
@@ -15,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/IBM/sarama"
 	"github.com/google/uuid"
@@ -35,7 +35,7 @@ const (
 
 type Service struct {
 	DB                  *storage.DataBase
-	GRPCTaskClient      task_v1.TaskClient
+	GRPCPostsClient     posts_v1.PostsClient
 	GRPCStatisticClient statistic_v1.StatisticClient
 	StatisticProducer   sarama.SyncProducer
 	AnswerConsumer      sarama.PartitionConsumer
@@ -109,14 +109,14 @@ func NewService(jwtKey string, ctx context.Context) (*Service, error) {
 
 	log.Println("Connected to MongoDB")
 
-	conTask, err := grpc.Dial("task:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conPosts, err := grpc.Dial("posts:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	gRPCTaskClient := task_v1.NewTaskClient(conTask)
+	gRPCPostsClient := posts_v1.NewPostsClient(conPosts)
 
-	log.Println("Connected to gRPC for task")
+	log.Println("Connected to gRPC for posts")
 
 	conStatistic, err := grpc.Dial("statistic:7070", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -136,7 +136,7 @@ func NewService(jwtKey string, ctx context.Context) (*Service, error) {
 
 	return &Service{
 		DB:                  db,
-		GRPCTaskClient:      gRPCTaskClient,
+		GRPCPostsClient:     gRPCPostsClient,
 		GRPCStatisticClient: gRPCStatisticClient,
 		StatisticProducer:   producer,
 		JWTKey:              []byte(jwtKey),
@@ -328,7 +328,7 @@ func (s *Service) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := s.GRPCTaskClient.CreatePost(context.Background(), &task_v1.PostRequest{UserID: claims.UserID, Text: postText.Text})
+	resp, err := s.GRPCPostsClient.CreatePost(context.Background(), &posts_v1.PostRequest{UserID: claims.UserID, Text: postText.Text})
 	if err != nil {
 		log.Println("Cassandra error")
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -359,7 +359,7 @@ func (s *Service) GetPostByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := s.GRPCTaskClient.GetPostByID(context.Background(), &task_v1.PostIDRequest{PostID: postID})
+	resp, err := s.GRPCPostsClient.GetPostByID(context.Background(), &posts_v1.PostIDRequest{PostID: postID})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -424,7 +424,7 @@ func (s *Service) GetPostsByUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := s.GRPCTaskClient.GetPostsByUser(context.Background(), &task_v1.UserRequest{UserID: user.UserID})
+	resp, err := s.GRPCPostsClient.GetPostsByUser(context.Background(), &posts_v1.UserRequest{UserID: user.UserID})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -475,7 +475,7 @@ func (s *Service) LikePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := s.GRPCTaskClient.GetPostByID(context.Background(), &task_v1.PostIDRequest{PostID: postID})
+	post, err := s.GRPCPostsClient.GetPostByID(context.Background(), &posts_v1.PostIDRequest{PostID: postID})
 	if err != nil {
 		http.Error(w, "Post not found", http.StatusNotFound)
 		return
@@ -534,7 +534,7 @@ func (s *Service) ViewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := s.GRPCTaskClient.GetPostByID(context.Background(), &task_v1.PostIDRequest{PostID: postID})
+	post, err := s.GRPCPostsClient.GetPostByID(context.Background(), &posts_v1.PostIDRequest{PostID: postID})
 	if err != nil {
 		http.Error(w, "Post not found", http.StatusNotFound)
 		return
@@ -599,7 +599,7 @@ func (s *Service) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = s.GRPCTaskClient.UpdatePost(context.Background(), &task_v1.UpdatePostRequest{PostID: postID, UserID: claims.UserID, Text: updatePost.Text})
+	_, err = s.GRPCPostsClient.UpdatePost(context.Background(), &posts_v1.UpdatePostRequest{PostID: postID, UserID: claims.UserID, Text: updatePost.Text})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -642,7 +642,7 @@ func (s *Service) DeletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = s.GRPCTaskClient.DeletePost(context.Background(), &task_v1.DeletePostRequest{PostID: postID, UserID: claims.UserID})
+	_, err = s.GRPCPostsClient.DeletePost(context.Background(), &posts_v1.DeletePostRequest{PostID: postID, UserID: claims.UserID})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

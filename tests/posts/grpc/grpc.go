@@ -1,7 +1,8 @@
 package main
 
 import (
-	"Service-oriented-architectures/internal/common/gen/go/task/proto"
+	"Service-oriented-architectures/internal/common/gen/go/posts/proto"
+
 	"context"
 	"fmt"
 	"github.com/google/uuid"
@@ -14,23 +15,23 @@ import (
 )
 
 func main() {
-	conTask, err := grpc.Dial("localhost:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conPosts, err := grpc.Dial("localhost:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	gRPCTaskClient := task_v1.NewTaskClient(conTask)
+	gRPCPostsClient := posts_v1.NewPostsClient(conPosts)
 
 	userID := uuid.NewString()
-	text := "Task test"
+	text := "Posts test"
 
-	createdPost, err := gRPCTaskClient.CreatePost(context.Background(), &task_v1.PostRequest{UserID: userID, Text: text})
+	createdPost, err := gRPCPostsClient.CreatePost(context.Background(), &posts_v1.PostRequest{UserID: userID, Text: text})
 	if err != nil {
 		fmt.Println("FAIL")
 		log.Fatal(err)
 	}
 
-	resp, err := gRPCTaskClient.GetPostByID(context.Background(), &task_v1.PostIDRequest{PostID: createdPost.PostID})
+	resp, err := gRPCPostsClient.GetPostByID(context.Background(), &posts_v1.PostIDRequest{PostID: createdPost.PostID})
 	if err != nil {
 		fmt.Println("FAIL")
 		log.Fatal(err)

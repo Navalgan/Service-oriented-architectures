@@ -2,7 +2,7 @@ FROM golang:latest
 
 COPY . /app
 
-WORKDIR /app/cmd/task
+WORKDIR /app/cmd/posts
 
 RUN go build main.go
 

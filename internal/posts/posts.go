@@ -1,7 +1,7 @@
-package task
+package posts
 
 import (
-	"Service-oriented-architectures/internal/task/grpc"
+	"Service-oriented-architectures/internal/posts/grpc"
 
 	"google.golang.org/grpc"
 )

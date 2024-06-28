@@ -1,14 +1,14 @@
 package main
 
 import (
-	"Service-oriented-architectures/internal/task"
+	"Service-oriented-architectures/internal/posts"
 
 	"log"
 	"net"
 )
 
 func main() {
-	service, err := task.NewService()
+	service, err := posts.NewService()
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -1,8 +1,8 @@
 package main
 
 import (
+	task_v1 "Service-oriented-architectures/internal/common/gen/go/posts/proto"
 	statistic_v1 "Service-oriented-architectures/internal/common/gen/go/statistic/proto"
-	task_v1 "Service-oriented-architectures/internal/common/gen/go/task/proto"
 	"bytes"
 	"encoding/json"
 	"fmt"
